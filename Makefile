@@ -14,7 +14,7 @@ endif
 
 #  FC = <your compiler>
 #  FC = ifort 
-#  FC = gfortran
+  FC = gfortran
   FFLAGS = -O3  
   LINKER = $(FC) -static   
 

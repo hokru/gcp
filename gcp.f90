@@ -99,13 +99,14 @@ write(*,*)'                                             '
 write(*,*)'|              **  g C P  **                |'
 write(*,*)'|  a geometrical counterpoise correction    |'
 write(*,*)'|     H.Kruse J.G.Brandenburg S.Grimme      |'
-write(*,*)'|          Version 2.02 Nov 2016            |'
-write(*,*)'|                                           |'
+write(*,*)'|          Version 2.02+                    |'
+write(*,*)'|    github.com/hokru/gcp                   |'
 write(*,*)' ___________________________________________ '
 write(*,*)
 write(*,*)'Please cite work done with this code as:'
 write(*,*)'H. Kruse, S. Grimme J. Chem. Phys. 136, 154101 (2012)'
 write(*,*)'DOI: 10.1063/1.3700154 '
+write(*,*)
 write(*,*)'For the periodic version, please also cite:'
 write(*,*)'J. G. Brandenburg, M. Alessio, B. Civalleri, M. F. Peintinger'
 write(*,*)'T. Bredow, S.Grimme J. Phys. Chem. A 117, 9282-9292 (2013).'
@@ -254,6 +255,8 @@ real*8 er,el,ebas,gbas(3,n)
 integer nargs, ios
 real*8 dmp_scal,dmp_exp
 
+parm=.false.
+
 !damping params
 dmp_scal=4.0d0 
 dmp_exp=6.0d0
@@ -317,7 +320,6 @@ if(method.eq.''.or.method.eq.'file')then
 !  open(unit=43,file='.tmpx')
 !  read(43,'(a)')atmp
 !  close(43,status='delete')  
-
   write(dtmp,'(a,''/.gcppar.'',a)') trim(atmp), trim(ftmp)
   inquire(file=trim(dtmp),exist=ex)
   if(ex)then
@@ -352,6 +354,7 @@ if(method.eq.''.or.method.eq.'file')then
        enddo
      endif
 9   close(42)
+     print*, parm
      if(.not.parm) then
       if(echo) write(*,*) 'loading ',trim(basname),' params'
       call setparam(emiss,nbas,p,basname)
@@ -368,6 +371,7 @@ method=trim(basname)
 else
     call setparam(emiss,nbas,p,method)
 endif
+
 
 !**********************************************************
 !* check for missing parameters for current elements      *
@@ -600,8 +604,10 @@ real*8 r0ab(max_elem,max_elem),autoang
 real*8 dampval, grdfirst,grdsecond,ene_old,ene_dmp,grd_dmp,dmp_scal,dmp_exp
 parameter (autoang =0.5291772083d0)  
 ! Two threshold. thrR: distance cutoff thrE: numerical noise cutoff
-thrR=60            ! 60 bohr
-thrE=epsilon(1.d0) ! cut below machine precision rounding
+!thrR=60            ! 60 bohr
+!thrE=epsilon(1.d0) ! cut below machine precision rounding
+thrR=40           
+thrE=5d-13
 
 if(echo) then
 write(*,*) '  '     
@@ -1042,11 +1048,11 @@ real(8) emiss(mpar),p(*)
 real(8) HFsv(apar),HFminis(apar),HF631gd(apar),HFsvp(apar),HFtz(apar),&
      HFvmb(apar),HFminisd(apar),oldHFsvp(apar),HFpobtz(apar),HFpobdzvp(apar),&
      HF2gcore(apar),HF2g(apar), HFdef1tzvp(apar),HFccdz(apar),HFaccdz(apar),&
-     HFdzp(apar),HFhsv(apar),HFdz(apar),HFmsvp(apar),HFdef2mtzvp(apar)
+     HFdzp(apar),HFhsv(apar),HFdz(apar),HFmsvp(apar),HFdef2mtzvp(apar),HF631g(apar)
 integer BASsv(apar),BASminis(apar),BAS631gd(apar),BAStz(apar),&
      BASsvp(apar),BASvmb(apar),BASminisd(apar),oldBASsvp(apar),BASpobtz(apar),BASpobdzvp(apar),&
      BAS2gcore(apar),BAS2g(apar),BASdef1tzvp(apar),BASccdz(apar),BASaccdz(apar),&
-     BASdzp(apar),BAShsv(apar),BASdz(apar),BASmsvp(apar),BASdef2mtzvp(apar)
+     BASdzp(apar),BAShsv(apar),BASdz(apar),BASmsvp(apar),BASdef2mtzvp(apar),BAS631g(apar)
 real(8) HFlanl2(10)
 integer BASlanl2(10)
 
@@ -1209,11 +1215,20 @@ data HFmsvp / &     !H-Kr modified Ahlrichs DZ, supplemented by def2-SV(P)
 0.350020d0,0.345780d0,0.349530d0,0.367310d0,0.382010d0,0.000000d0/
 
 
+data HF631g / &
+0.0100826d0,0.00884298d0, &
+0.071644d0,0.0305799d0,0.0328218d0,0.0215478d0,0.0244447d0,0.0379231d0,0.054363d0,0.0768264d0, &
+0.106290d0,0.0723627d0,0.101324d0, 0.0735997d0,0.0548207d0,0.0592296d0,0.0599754d0,0.061876d0,&
+0.0841911d0,0.163321d0,&
+0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,&
+0.000000,0.000000,0.000000,0.000000,0.000000,0.000000/
+
 ! *********************
 ! * nr. of basis fkt  *
 ! *********************
 data BASsv/2*2,2*3,6*9,2*7,6*13,2*11,10*21,6*27/           
 data BASminis/2*1,2*2,6*5,2*6,6*9,2*10,16*0/
+data BAS631g/2,2,8*9,8*13,2*17,10*0,4*0,0,0/
 data BAS631gd/2,5,8*14,8*18,2*22,10*0,4*0,32,0/
 data BASsvp/2*5,9,9,6*14,15,18,6*18,24,24,10*31,6*32/  
 data oldBASsvp/2*5,6,9,6*14,2*10,6*18,14,24,10*31,6*32/
@@ -1308,7 +1323,7 @@ data BASmsvp / &  ! modified Ahlrichs DZ, supplemented by def2-SV(P)
 
 emiss=0d0
 nbas =0d0
-
+print*, method
 select case (method)
 !*****************
 !* Hartree-Fock  *
@@ -1357,6 +1372,15 @@ select case (method)
      p(2)=1.5652d0
      p(3)=0.9447d0
      p(4)=1.2100d0
+  case ('hf/631g') ! 6-31G + LANLDZ for QR  RMS=0.38
+     emiss(1:apar)=HF631gd(1:apar)
+     nbas(1:apar)=BAS631gd(1:apar)
+     p(1)=0.3779d0
+     p(2)=1.3285d0    
+     p(3)=0.9807d0
+     p(4)=1.1713d0
+     emiss(21:30)=HFlanl2(1:10)
+     nbas(21:30)=BASlanl2(1:10)
   case ('hf/minis') ! RMS= 0.3040
     emiss(1:apar)=HFminis(1:apar)
     nbas(1:apar)=BASminis(1:apar)
@@ -1573,6 +1597,7 @@ case ('hf/accdz','hf/augccpvdz') !RMS=0.2222
      p(2)=1.4634d0
      p(3)=0.3513d0
      p(4)=1.6880d0
+   
 
 
 !*****************
@@ -1749,6 +1774,11 @@ case('msvp')
 case('mtzvp')
   emiss(1:apar)=HFdef2mtzvp(1:apar)
   nbas(1:apar)=BASdef2mtzvp(1:apar)  
+case ('631g')
+  emiss(1:apar)=HF631g(1:apar)
+  nbas(1:apar)=BAS631g(1:apar)
+  emiss(21:30)=HFlanl2(1:10)
+  nbas(21:30)=BASlanl2(1:10)
 case default
   write(*,'(3a)')  '** ',trim(method),' **'
   stop 'not implemented'
@@ -1849,7 +1879,8 @@ if(za.eq.zb.OR.abs(za-zb).lt.0.1) then
    case(6) 
     if(shell(na).lt.shell(nb)) then
       norm=SQRT((za**5)*(zb**7)/7.5D00)*(R**6)*0.03125D00
-      ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1)-2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3))+A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
+      ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1)-2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3)) &
+         +A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
     else
       xx=za
       za=zb
@@ -1857,7 +1888,8 @@ if(za.eq.zb.OR.abs(za-zb).lt.0.1) then
       ax=(za+zb)*R05
       bx=(zb-za)*R05
       norm=SQRT((za**5)*(zb**7)/7.5D00)*(R**6)*0.03125D00
-      ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1)-2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3))+A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
+      ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1)-2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3)) &
+          +A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
     endif
    case(9)
       norm=sqrt((ZA*ZB*R*R)**7)/480.d0
@@ -2894,9 +2926,9 @@ if(maxval(ifrez,nat).eq.1) then
  if(echo) then
   write(*,'(a,x,I4,x,a)') '  found ',iff,' frozen cart. coordinates'
   if(iff.lt.50) then ! dont spam the output to much ...
-   write(*,'($,a)') '  atom nr: '
+   write(*,'(a,$)') '  atom nr: '
    do i=1,nat
-     if(ifrez(i).eq.1) write(*,'($,x,I2)') i
+     if(ifrez(i).eq.1) write(*,'(x,I2,$)') i
    enddo
    write(*,'(a)') ' '
   endif
@@ -3575,6 +3607,8 @@ case('def1tzvp')
  getlevel='basis: def1-TZVP'
 case('pbeh3c')
  getlevel='basis: def2-mSVP'
+case('631g')
+ getlevel='basis: 6-31G + LANL2DZ(Sc-Zn) (Turbomole)'
 end select
 
 end function
@@ -3969,7 +4003,7 @@ detlat=detlat-latt(3,1)*latt(2,2)*latt(1,3)-latt(3,2)*latt(2,3)*latt(1,1)-latt(3
 
 if(detlat.eq.0) then
    write(*,*) ' Error: singular cell matrix'
-   stop'Singular cellmatrix'
+   stop 'Singular cellmatrix'
 end if
 ilat(1,1)=latt(2,2)*latt(3,3)-latt(3,2)*latt(2,3)
 ilat(1,2)=latt(1,3)*latt(3,2)-latt(3,3)*latt(1,2)
