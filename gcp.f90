@@ -36,7 +36,7 @@ character*2 esym
 character*80 arg(10)
 character*80 atmp,ftmp,dtmp  
 !pbc stuff
-logical vasp, stress,pbc
+logical vasp, stress,pbc,damp
 character*80 args(90), comment, line
 real*8 lat(3,3), gcp_glat(3,3)
 integer nargs, ios   
@@ -47,6 +47,7 @@ lib=.false.
 !************
 !* Defaults *
 !************
+damp=.false.
 warn=.false.
 parm=.false.
 dohess=.false.
@@ -87,6 +88,7 @@ if(index(ftmp,'-vasp ').ne.0) vasp=.true.
 if(index(ftmp,'-stress ').ne.0) stress=.true.
 if(index(ftmp,'-tme'   ).ne.0)tmen=.true.
 if(index(ftmp,'-parfile ').ne.0) parfile=.true.
+if(index(ftmp,'-damp ').ne.0) damp=.true.
 enddo
 method=lowercase(method)
 
@@ -173,7 +175,7 @@ if(n.lt.1)     stop 'no atoms'
 if(n.gt.maxat) stop 'too many atoms' 
 
 
-call gcp_call(n,xyz,lat,iz,gcp_e,gcp_g,gcp_glat,dograd,dohess,pbc,method,echo,parfile)
+call gcp_call(n,xyz,lat,iz,gcp_e,gcp_g,gcp_glat,dograd,dohess,pbc,method,echo,parfile,damp)
 
 
 ! print gradient to std outout
@@ -208,7 +210,8 @@ call gcp_call(n,xyz,lat,iz,gcp_e,gcp_g,gcp_glat,dograd,dohess,pbc,method,echo,pa
 
 
 !subroutine for interfacing with orca/turbomole/crystal
-subroutine gcp_call(n,xyz,lat,iz,gcp_e,gcp_g,gcp_glat,dograd,dohess,pbc,method,echo,parfile)
+subroutine gcp_call(n,xyz,lat,iz,gcp_e,gcp_g,gcp_glat,dograd,dohess,pbc,method,echo,parfile,damp)
+use strings
 implicit none
 integer n   !number of atoms
 real*8 xyz(3,n) !xyzcoordinates
@@ -262,7 +265,7 @@ dmp_scal=4.0d0
 dmp_exp=6.0d0
 !default
 base=.false.
-damp=.false.
+!damp=.false.
 
 !************************
 !* modify input string  *
@@ -328,6 +331,7 @@ if(method.eq.''.or.method.eq.'file')then
          read(42,'(a)',end=9)ftmp
      call charXsplit(ftmp,basname,1)
      call lower_case(basname)
+     call delsubstr(ftmp,trim(basname))
      call readl(ftmp,xx,nn)
      p(1:4)=xx(1:4)
       if(adjustl(trim(basname)).eq.'#') then

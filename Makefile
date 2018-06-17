@@ -1,4 +1,4 @@
- PROG = gcp
+ PROG = ~/bin/gcp
  OBJS = gcp.o stringmod.o
 #--------------------------------------------------------------------------
 # Testing for 1. gfortran 2. ifort
